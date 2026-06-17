@@ -221,10 +221,11 @@ def time_name():
     current_time = now.strftime("%H%M%S")
     return f"{date} {current_time}.mp4"
 
-
+# =============== FIXED DOWNLOAD_VIDEO WITH ARIA2C ===============
 async def download_video(url,cmd, name):
-    #download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
-    download_cmd = f'{cmd} -R 25 --fragment-retries 25'
+    # FIXED: aria2c enabled with 16 parallel connections
+    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
+    #download_cmd = f'{cmd} -R 25 --fragment-retries 25'
     global failed_counter
     print(download_cmd)
     logging.info(download_cmd)
@@ -287,6 +288,7 @@ async def download_and_decrypt_video(url, cmd, name, key):
             print(f"Failed to decrypt {video_path}.")  
             return None  
 
+# =============== FIXED SEND_VID WITH CHUNK SIZE ===============
 async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channel_id):
     subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
     await prog.delete (True)
@@ -315,9 +317,11 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
     start_time = time.time()
 
     try:
-        await bot.send_video(channel_id, w_filename, caption=cc, supports_streaming=True, height=720, width=1280, thumb=thumbnail, duration=dur, progress=progress_bar, progress_args=(reply, start_time))
+        # FIXED: chunk_size added for faster uploading
+        await bot.send_video(channel_id, w_filename, caption=cc, supports_streaming=True, height=720, width=1280, thumb=thumbnail, duration=dur, progress=progress_bar, progress_args=(reply, start_time), chunk_size=1024*1024)
     except Exception:
-        await bot.send_document(channel_id, w_filename, caption=cc, progress=progress_bar, progress_args=(reply, start_time))
+        # FIXED: chunk_size added for faster uploading
+        await bot.send_document(channel_id, w_filename, caption=cc, progress=progress_bar, progress_args=(reply, start_time), chunk_size=1024*1024)
     os.remove(w_filename)
     await reply.delete(True)
     await reply1.delete(True)
