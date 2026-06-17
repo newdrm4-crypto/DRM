@@ -85,22 +85,30 @@ def register_settings_handlers(bot):
     async def handle_caption(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit(
-            "**Caption Style 1**\n"
-            "<blockquote expandable><b>[🎥]Vid Id</b> : {str(count).zfill(3)}\n"
-            "**Video Title :** `{name1} [{res}p].{ext}`\n"
-            "<blockquote><b>Batch Name :</b> {b_name}</blockquote>\n\n"
-            "**Extracted by➤**{CR}</blockquote>\n\n"
-            "**Caption Style 2**\n"
-            "<blockquote expandable>**——— ✦ {str(count).zfill(3)} ✦ ———**\n\n"
-            "🎞️ **Title** : `{name1}`\n"
-            "**├── Extention :  {extension}.{ext}**\n"
-            "**├── Resolution : [{res}]**\n"
-            "📚 **Course : {b_name}**\n\n"
-            "🌟 **Extracted By : {credit}**</blockquote>\n\n"
-            "**Caption Style 3**\n"
-            "<blockquote expandable>**{str(count).zfill(3)}.** {name1} [{res}p].{ext}</blockquote>\n\n"
-            "**Send Your Caption Style eg. /cc1 or /cc2 or /cc3**", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit(
+                "**Caption Style 1**\n"
+                "<blockquote expandable><b>[🎥]Vid Id</b> : {str(count).zfill(3)}\n"
+                "**Video Title :** `{name1} [{res}p].{ext}`\n"
+                "<blockquote><b>Batch Name :</b> {b_name}</blockquote>\n\n"
+                "**Extracted by➤**{CR}</blockquote>\n\n"
+                "**Caption Style 2**\n"
+                "<blockquote expandable>**——— ✦ {str(count).zfill(3)} ✦ ———**\n\n"
+                "🎞️ **Title** : `{name1}`\n"
+                "**├── Extention :  {extension}.{ext}**\n"
+                "**├── Resolution : [{res}]**\n"
+                "📚 **Course : {b_name}**\n\n"
+                "🌟 **Extracted By : {credit}**</blockquote>\n\n"
+                "**Caption Style 3**\n"
+                "<blockquote expandable>**{str(count).zfill(3)}.** {name1} [{res}p].{ext}</blockquote>\n\n"
+                "**Send Your Caption Style eg. /cc1 or /cc2 or /cc3**", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same caption style.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/cc1":
@@ -114,7 +122,8 @@ def register_settings_handlers(bot):
                 await editable.edit(f"✅ Caption Style 3 Updated!", reply_markup=keyboard)
             
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Caption Style:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Caption Style:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -122,7 +131,15 @@ def register_settings_handlers(bot):
     async def handle_caption(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit("**Send End File Name or Send /d**", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit("**Send End File Name or Send /d**", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/d":
@@ -132,7 +149,8 @@ def register_settings_handlers(bot):
                 globals.endfilename = input_msg.text
                 await editable.edit(f"✅ End File Name `{globals.endfilename}` is enabled!", reply_markup=keyboard)            
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set End File Name:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set End File Name:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -140,7 +158,15 @@ def register_settings_handlers(bot):
     async def video_thumbnail(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="thummbnail_command")]])
-        editable = await callback_query.message.edit(f"Send the Video Thumb URL or Send /d \n<blockquote><b>Note </b>- For document format send : No</blockquote>", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit(f"Send the Video Thumb URL or Send /d \n<blockquote><b>Note </b>- For document format send : No</blockquote>", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.startswith("http://") or input_msg.text.startswith("https://"):
@@ -153,7 +179,8 @@ def register_settings_handlers(bot):
                 globals.thumb = input_msg.text
                 await editable.edit(f"✅ Video in Document Format is enabled !", reply_markup=keyboard)
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set thumbnail:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set thumbnail:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -173,7 +200,15 @@ def register_settings_handlers(bot):
     async def credit(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit(f"Send Credit Name or Send /d", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit(f"Send Credit Name or Send /d", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/d":
@@ -183,7 +218,8 @@ def register_settings_handlers(bot):
                 globals.CR = input_msg.text
                 await editable.edit(f"✅ Credit set as {globals.CR} !", reply_markup=keyboard)
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Credit:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Credit:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -191,13 +227,22 @@ def register_settings_handlers(bot):
     async def handle_token(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="set_token_command")]])
-        editable = await callback_query.message.edit("**Send Classplus Token**", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit("**Send Classplus Token**", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             globals.cptoken = input_msg.text
             await editable.edit(f"✅ Classplus Token set successfully !\n\n<blockquote expandable>`{globals.cptoken}`</blockquote>", reply_markup=keyboard)
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Classplus Token:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Classplus Token:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -205,13 +250,22 @@ def register_settings_handlers(bot):
     async def handle_token(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="set_token_command")]])
-        editable = await callback_query.message.edit("**Send Physics Wallah Same Batch Token**", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit("**Send Physics Wallah Same Batch Token**", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             globals.pwtoken = input_msg.text
             await editable.edit(f"✅ Physics Wallah Token set successfully !\n\n<blockquote expandable>`{globals.pwtoken}`</blockquote>", reply_markup=keyboard) 
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Physics Wallah Token:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Physics Wallah Token:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -219,7 +273,15 @@ def register_settings_handlers(bot):
     async def handle_token(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="set_token_command")]])
-        editable = await callback_query.message.edit("**Send Carrerwill Token**", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit("**Send Carrerwill Token**", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/d":
@@ -229,7 +291,8 @@ def register_settings_handlers(bot):
                 globals.cwtoken = input_msg.text
                 await editable.edit(f"✅ Carrerwill Token set successfully !\n\n<blockquote expandable>`{globals.cwtoken}`</blockquote>", reply_markup=keyboard)      
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Careerwill Token:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Careerwill Token:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -237,7 +300,15 @@ def register_settings_handlers(bot):
     async def video_watermark(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="wattermark_command")]])
-        editable = await callback_query.message.edit(f"**Send Video Watermark text or Send /d**", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit(f"**Send Video Watermark text or Send /d**", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/d":
@@ -247,7 +318,8 @@ def register_settings_handlers(bot):
                 globals.vidwatermark = input_msg.text
                 await editable.edit(f"Video Watermark `{globals.vidwatermark}` enabled ✅!", reply_markup=keyboard)
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Watermark:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Watermark:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -267,7 +339,15 @@ def register_settings_handlers(bot):
     async def handle_quality(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit("__**Enter resolution or Video Quality (`144`, `240`, `360`, `480`, `720`, `1080`) or Send /d**__", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit("__**Enter resolution or Video Quality (`144`, `240`, `360`, `480`, `720`, `1080`) or Send /d**__", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "144":
@@ -306,7 +386,8 @@ def register_settings_handlers(bot):
                 globals.res = '854x480'
                 await editable.edit(f"✅ Video Quality set {globals.quality} as Default !", reply_markup=keyboard)  
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Video Quality:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Video Quality:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -314,7 +395,15 @@ def register_settings_handlers(bot):
     async def video_watermark(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit(f"**If you want to enable topic in caption: send /yes or send /d**\n\n<blockquote><b>Topic fetch from (bracket) in title</b></blockquote>", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit(f"**If you want to enable topic in caption: send /yes or send /d**\n\n<blockquote><b>Topic fetch from (bracket) in title</b></blockquote>", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/yes":               
@@ -324,7 +413,8 @@ def register_settings_handlers(bot):
                 globals.topic = input_msg.text
                 await editable.edit(f"Topic disabled in Caption ✅!", reply_markup=keyboard)
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to set Topic in Caption:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to set Topic in Caption:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
@@ -332,7 +422,15 @@ def register_settings_handlers(bot):
     async def credit(client, callback_query):
         user_id = callback_query.from_user.id
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Settings", callback_data="setttings")]])
-        editable = await callback_query.message.edit(f"If you want to reset settings send /yes or Send /no", reply_markup=keyboard)
+        try:
+            editable = await callback_query.message.edit(f"If you want to reset settings send /yes or Send /no", reply_markup=keyboard)
+        except Exception as e:
+            if "MESSAGE_NOT_MODIFIED" in str(e):
+                await callback_query.answer("Already same message.", show_alert=False)
+                return
+            else:
+                await callback_query.answer(f"Error: {str(e)}", show_alert=True)
+                return
         input_msg = await bot.listen(editable.chat.id)
         try:
             if input_msg.text.lower() == "/yes":
@@ -352,7 +450,8 @@ def register_settings_handlers(bot):
             else:
                 await editable.edit(f"✅ Settings Not Changed !", reply_markup=keyboard)
         except Exception as e:
-            await editable.edit(f"<b>❌ Failed to Change Settings:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
+            if "MESSAGE_NOT_MODIFIED" not in str(e):
+                await editable.edit(f"<b>❌ Failed to Change Settings:</b>\n<blockquote expandable>{str(e)}</blockquote>", reply_markup=keyboard)
         finally:
             await input_msg.delete()
 
