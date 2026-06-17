@@ -204,8 +204,11 @@ def time_name():
     current_time = now.strftime("%H%M%S")
     return f"{date} {current_time}.mp4"
 
-# =============== DOWNLOAD_VIDEO WITH ARIA2C ===============
+# ============================================================
+# =============== DOWNLOAD_VIDEO - ARIA2C ENABLED ============
+# ============================================================
 async def download_video(url,cmd, name):
+    # ✅ ARIA2C ENABLED - 16 THREADS FOR MAX SPEED
     download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
     global failed_counter
     print(download_cmd)
@@ -265,7 +268,7 @@ async def download_and_decrypt_video(url, cmd, name, key):
             return None  
 
 # ============================================================
-# =============== FIXED SEND_VID - PROPER ORIENTATION ========
+# =============== SEND_VID - ORIGINAL RESOLUTION + ZOOM ======
 # ============================================================
 async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channel_id):
     # ✅ Check if file exists
@@ -332,18 +335,18 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
 
         print(f"📤 Attempting to send video: {w_filename}")
 
-        # ✅ ========== TRY TO SEND AS STREAMING VIDEO ==========
+        # ✅ ========== VIDEO UPLOAD - ORIGINAL RESOLUTION ==========
         try:
             await bot.send_video(
                 chat_id=channel_id,
                 video=w_filename,
                 caption=cc,
-                supports_streaming=True,  # ✅ Zoom/Rotate option aayega
-                thumb=thumbnail,
-                duration=dur,
+                supports_streaming=True,    # ✅ Zoom/Rotate option aayega
+                thumb=thumbnail,            # ✅ Thumbnail
+                duration=dur,               # ✅ Duration
                 progress=progress_bar,
                 progress_args=(reply, start_time)
-                # ✅ Removed height/width - video apni original resolution mein upload hogi
+                # ✅ NO height/width - VIDEO APNI ORIGINAL RESOLUTION MEIN UPLOAD HOGI
             )
             print("✅ Video uploaded successfully as STREAMING VIDEO!")
             await m.reply_text("✅ Video uploaded successfully! (Streaming enabled)")
@@ -352,7 +355,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
             error_msg = str(video_error)
             print(f"⚠️ Send Video failed: {error_msg}")
             
-            # ✅ ========== IF VIDEO FAILS, TRY AS DOCUMENT ==========
+            # ✅ ========== FALLBACK: SEND AS DOCUMENT ==========
             try:
                 await bot.send_document(
                     chat_id=channel_id,
