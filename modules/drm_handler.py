@@ -167,7 +167,8 @@ async def drm_handler(bot: Client, m: Message):
             raw_text = '1'
             raw_text7 = '/d'
             channel_id = m.chat.id
-            b_name = '**Link Input**'
+            # FIXED: Changed from '**Link Input**' to 'Direct_Link_Input' to avoid empty title issues
+            b_name = 'Direct_Link_Input'
             await m.delete()
         else:
             editable = await m.reply_text(f"╭━━━━❰ᴇɴᴛᴇʀ ʀᴇꜱᴏʟᴜᴛɪᴏɴ❱━━➣ \n┣━━⪼ send `144`  for 144p\n┣━━⪼ send `240`  for 240p\n┣━━⪼ send `360`  for 360p\n┣━━⪼ send `480`  for 480p\n┣━━⪼ send `720`  for 720p\n┣━━⪼ send `1080` for 1080p\n╰━━⌈⚡[🦋`{CREDIT}`🦋]⚡⌋━━➣ ")
@@ -196,7 +197,8 @@ async def drm_handler(bot: Client, m: Message):
             raw_text = '1'
             raw_text7 = '/d'
             channel_id = m.chat.id
-            b_name = '**Link Input**'
+            # FIXED: Changed from '**Link Input**' to 'Direct_Link_Input' to avoid empty title issues
+            b_name = 'Direct_Link_Input'
             path = os.path.join("downloads", "Free Batch")
             await editable.delete()
         
@@ -240,6 +242,7 @@ async def drm_handler(bot: Client, m: Message):
              
             name1 = links[i][0].replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             if m.text:
+                # FIXED: Agar title empty hai toh default naam do
                 if "youtu" in url:
                     oembed_url = f"https://www.youtube.com/oembed?url={url}&format=json"
                     response = requests.get(oembed_url)
@@ -248,8 +251,13 @@ async def drm_handler(bot: Client, m: Message):
                     name = f'{audio_title[:60]}'
                     namef = f'{audio_title[:60]}'
                 else:
-                    name = f'{name1[:60]}'
-                    namef = f'{name1[:60]}'
+                    if name1.strip():
+                        name = f'{name1[:60]}'
+                        namef = f'{name1[:60]}'
+                    else:
+                        default_name = f"Video_{str(count).zfill(3)}"
+                        name = default_name
+                        namef = default_name
             else:
                 if topic == "/yes":
                     raw_title = links[i][0]
