@@ -29,12 +29,14 @@ from authorisation import register_authorisation_handlers
 from vars import API_ID, API_HASH, BOT_TOKEN, OWNER, CREDIT, AUTH_USERS, TOTAL_USERS, cookies_file_path
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 
-# Initialize the bot
+# Initialize the bot - FIXED with max_concurrent_transmissions
 bot = Client(
     "bot",
     api_id=API_ID,
     api_hash=API_HASH,
-    bot_token=BOT_TOKEN
+    bot_token=BOT_TOKEN,
+    sleep_threshold=60,
+    max_concurrent_transmissions=10
 )
 
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
