@@ -265,7 +265,7 @@ async def download_and_decrypt_video(url, cmd, name, key):
             return None  
 
 # ============================================================
-# =============== FIXED SEND_VID - PROPER ERROR HANDLING =====
+# =============== FIXED SEND_VID - PROPER ORIENTATION ========
 # ============================================================
 async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channel_id):
     # ✅ Check if file exists
@@ -276,7 +276,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
 
     print(f"📤 Starting upload for: {filename}")
 
-    # Generate Thumbnail
+    # ✅ Generate Thumbnail
     thumb_path = f"{filename}.jpg"
     try:
         subprocess.run(
@@ -296,7 +296,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
     reply = await m.reply_text(f"**Generate Thumbnail:**\n<blockquote>**{name}**</blockquote>")
     
     try:
-        # Check watermark
+        # ✅ Check watermark
         if vidwatermark == "/d" or not vidwatermark:
             w_filename = filename
             print("ℹ️ No watermark applied")
@@ -315,16 +315,16 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
                 print(f"⚠️ Font file not found: {font_path}, skipping watermark")
                 w_filename = filename
 
-        # Check if watermarked file exists
+        # ✅ Check if watermarked file exists
         if not os.path.exists(w_filename):
             print(f"❌ Watermarked file not found: {w_filename}, using original")
             w_filename = filename
 
-        # Get duration
+        # ✅ Get duration
         dur = int(duration(w_filename))
         start_time = time.time()
 
-        # Determine thumbnail
+        # ✅ Determine thumbnail
         if thumb == "/d" or not thumb:
             thumbnail = thumb_path if thumb_path and os.path.exists(thumb_path) else None
         else:
@@ -332,26 +332,27 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
 
         print(f"📤 Attempting to send video: {w_filename}")
 
-        # ==================== TRY TO SEND AS VIDEO ====================
+        # ✅ ========== TRY TO SEND AS STREAMING VIDEO ==========
         try:
             await bot.send_video(
                 chat_id=channel_id,
                 video=w_filename,
                 caption=cc,
-                supports_streaming=True,
+                supports_streaming=True,  # ✅ Zoom/Rotate option aayega
                 thumb=thumbnail,
                 duration=dur,
                 progress=progress_bar,
                 progress_args=(reply, start_time)
+                # ✅ Removed height/width - video apni original resolution mein upload hogi
             )
-            print("✅ Video uploaded successfully as VIDEO!")
-            
+            print("✅ Video uploaded successfully as STREAMING VIDEO!")
+            await m.reply_text("✅ Video uploaded successfully! (Streaming enabled)")
+
         except Exception as video_error:
-            # ==================== IF VIDEO FAILS, TRY AS DOCUMENT ====================
             error_msg = str(video_error)
             print(f"⚠️ Send Video failed: {error_msg}")
-            await m.reply_text(f"⚠️ Video upload failed, retrying as document...\nError: {error_msg[:200]}")
             
+            # ✅ ========== IF VIDEO FAILS, TRY AS DOCUMENT ==========
             try:
                 await bot.send_document(
                     chat_id=channel_id,
@@ -360,22 +361,21 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
                     progress=progress_bar,
                     progress_args=(reply, start_time)
                 )
-                print("✅ Video uploaded successfully as DOCUMENT!")
+                print("✅ Video uploaded successfully as DOCUMENT (fallback)!")
+                await m.reply_text(f"⚠️ Video uploaded as document (streaming not supported).\nError: {error_msg[:150]}")
                 
             except Exception as doc_error:
-                # ==================== BOTH FAILED ====================
                 doc_error_msg = str(doc_error)
                 print(f"❌ Document upload also failed: {doc_error_msg}")
                 await m.reply_text(f"❌ Upload failed!\nVideo Error: {error_msg[:150]}\nDocument Error: {doc_error_msg[:150]}")
                 return
 
     except Exception as e:
-        # ==================== CATCH ALL OTHER ERRORS ====================
         print(f"❌ Unexpected error in send_vid: {str(e)}")
         await m.reply_text(f"❌ Unexpected error: {str(e)[:300]}")
         return
 
-    # ==================== CLEANUP ====================
+    # ✅ ========== CLEANUP ==========
     try:
         if os.path.exists(w_filename) and w_filename != filename:
             os.remove(w_filename)
