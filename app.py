@@ -1,3 +1,5 @@
+import uvloop
+uvloop.install()
 from flask import Flask
 app = Flask(__name__)
 
