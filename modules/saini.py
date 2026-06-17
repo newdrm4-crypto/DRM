@@ -124,8 +124,8 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
         output_path = Path(output_path)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        #cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --external-downloader aria2c "{mpd_url}"'
-        cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate "{mpd_url}"'
+        cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --external-downloader aria2c "{mpd_url}"'
+        #cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate "{mpd_url}"'
         print(f"Running command: {cmd1}")
         os.system(cmd1)
         
@@ -223,8 +223,8 @@ def time_name():
 
 
 async def download_video(url,cmd, name):
-    #download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
-    download_cmd = f'{cmd} -R 25 --fragment-retries 25'
+    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
+    #download_cmd = f'{cmd} -R 25 --fragment-retries 25'
     global failed_counter
     print(download_cmd)
     logging.info(download_cmd)
