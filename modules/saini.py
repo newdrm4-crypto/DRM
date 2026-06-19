@@ -151,7 +151,7 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
         for data in avDir:
             if data.suffix == ".mp4" and not video_decrypted:
                 cmd2 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/video.mp4"'
-                print(f"Running: {cmd2}')
+                print(f"Running: {cmd2}")
                 await run_shell(cmd2)  # ✅ Async
                 if (output_path / "video.mp4").exists():
                     video_decrypted = True
