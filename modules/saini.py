@@ -245,7 +245,7 @@ def time_name():
 async def download_video(url, cmd, name):
     global failed_counter
     # ✅ Aria2 के साथ तेज़ डाउनलोड – x16 connections, 32 parallel chunks
-    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 4 -j 8"'
+    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 2 -j 4"'
     print(f"Download command: {download_cmd}")
     logging.info(download_cmd)
 
