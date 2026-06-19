@@ -21,7 +21,7 @@ from Crypto.Util.Padding import unpad
 from base64 import b64decode
 
 # ============================================================
-# ✅ नया Async Shell हेल्पर – सभी कमांड्स इसी से चलेंगे
+# ✅ Async Shell हेल्पर – सभी कमांड्स इसी से चलेंगे
 # ============================================================
 async def run_shell(cmd: str) -> tuple[int, str, str]:
     """
@@ -37,7 +37,7 @@ async def run_shell(cmd: str) -> tuple[int, str, str]:
     return process.returncode, stdout.decode(), stderr.decode()
 
 # ============================================================
-# ✅ duration – ffprobe (sync रह सकता है, क्योंकि यह एक quick call है)
+# ✅ duration – ffprobe (sync रह सकता है)
 # ============================================================
 def duration(filename):
     result = subprocess.run(
@@ -50,7 +50,7 @@ def duration(filename):
     return float(result.stdout)
 
 # ============================================================
-# ✅ get_mps_and_keys – (sync, because it's just a network request)
+# ✅ get_mps_and_keys – sync (network request)
 # ============================================================
 def get_mps_and_keys(api_url):
     response = requests.get(api_url)
@@ -58,10 +58,6 @@ def get_mps_and_keys(api_url):
     mpd = response_json.get('url')
     keys = response_json.get('keys')
     return mpd, keys
-
-# ============================================================
-# ❌ पुराना exec और pull_run हटा दिया (ThreadPoolExecutor की जरूरत नहीं)
-# ============================================================
 
 # ============================================================
 # ✅ PDF डाउनलोड – Async (aiohttp + aiofiles)
@@ -87,7 +83,7 @@ async def download(url, name):
     return ka
 
 # ============================================================
-# ✅ parse_vid_info / vid_info – (sync, text parsing only)
+# ✅ parse_vid_info / vid_info – sync (text parsing)
 # ============================================================
 def parse_vid_info(info):
     info = info.strip()
@@ -139,7 +135,7 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
 
         cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --external-downloader aria2c "{mpd_url}"'
         print(f"Running: {cmd1}")
-        await run_shell(cmd1)  # ✅ Async
+        await run_shell(cmd1)
 
         avDir = list(output_path.iterdir())
         print(f"Downloaded files: {avDir}")
@@ -152,14 +148,14 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
             if data.suffix == ".mp4" and not video_decrypted:
                 cmd2 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/video.mp4"'
                 print(f"Running: {cmd2}")
-                await run_shell(cmd2)  # ✅ Async
+                await run_shell(cmd2)
                 if (output_path / "video.mp4").exists():
                     video_decrypted = True
                 data.unlink()
             elif data.suffix == ".m4a" and not audio_decrypted:
                 cmd3 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/audio.m4a"'
                 print(f"Running: {cmd3}")
-                await run_shell(cmd3)  # ✅ Async
+                await run_shell(cmd3)
                 if (output_path / "audio.m4a").exists():
                     audio_decrypted = True
                 data.unlink()
@@ -167,10 +163,9 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
         if not video_decrypted or not audio_decrypted:
             raise FileNotFoundError("Decryption failed: video or audio file not found.")
 
-        # ✅ FFmpeg को -preset veryfast और -threads 4 देकर तेज़ करें
         cmd4 = f'ffmpeg -i "{output_path}/video.mp4" -i "{output_path}/audio.m4a" -c copy -preset veryfast -threads 4 "{output_path}/{output_name}.mp4"'
         print(f"Running: {cmd4}")
-        await run_shell(cmd4)  # ✅ Async
+        await run_shell(cmd4)
 
         if (output_path / "video.mp4").exists():
             (output_path / "video.mp4").unlink()
@@ -181,7 +176,6 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
         if not filename.exists():
             raise FileNotFoundError("Merged video file not found.")
 
-        # Duration info – optional, sync is fine
         cmd5 = f'ffmpeg -i "{filename}" 2>&1 | grep "Duration"'
         duration_info = os.popen(cmd5).read()
         print(f"Duration info: {duration_info}")
@@ -193,7 +187,7 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
         raise
 
 # ============================================================
-# ✅ run – पहले से Async है, ठीक है
+# ✅ run – Async
 # ============================================================
 async def run(cmd):
     proc = await asyncio.create_subprocess_shell(
@@ -211,7 +205,7 @@ async def run(cmd):
         return f'[stderr]\n{stderr.decode()}'
 
 # ============================================================
-# ✅ old_download – sync, fine (rarely used)
+# ✅ old_download – sync (rarely used)
 # ============================================================
 def old_download(url, file_name, chunk_size=1024 * 10):
     if os.path.exists(file_name):
@@ -224,7 +218,7 @@ def old_download(url, file_name, chunk_size=1024 * 10):
     return file_name
 
 # ============================================================
-# ✅ human_readable_size / time_name – सिंपल sync functions
+# ✅ human_readable_size / time_name
 # ============================================================
 def human_readable_size(size, decimal_places=2):
     for unit in ['B', 'KB', 'MB', 'GB', 'TB', 'PB']:
@@ -240,26 +234,34 @@ def time_name():
     return f"{date} {current_time}.mp4"
 
 # ============================================================
-# ✅ download_video – पूरी तरह Async (सबसे महत्वपूर्ण)
+# ✅ download_video – पूरी तरह Async + PIPELINE OPTIMIZED
 # ============================================================
 async def download_video(url, cmd, name):
     global failed_counter
-    # ✅ Aria2 के साथ तेज़ डाउनलोड – x16 connections, 32 parallel chunks
-    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 2 -j 4"'
+
+    # 🚀 RENDER + SPEED PIPELINE FIX:
+    # अगर M3U8 या MPD (HLS/DASH) है तो Aria2 हटाओ और yt-dlp के Concurrent Fragments चालू करो
+    if "m3u8" in url or "mpd" in url:
+        # 5 चंक्स एक साथ डाउनलोड होंगे (CPU पर ज्यादा लोड नहीं, Render के लिए परफेक्ट)
+        download_cmd = f'{cmd} -R 25 --fragment-retries 25 --no-check-certificate --concurrent-fragments 5'
+    else:
+        # Progressive (MP4) वीडियो के लिए Aria2, लेकिन 2 कनेक्शन (stable render fix)
+        download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 2 -j 4 --summary-interval=0 --console-log-level=error"'
+
     print(f"Download command: {download_cmd}")
     logging.info(download_cmd)
 
-    retcode, stdout, stderr = await run_shell(download_cmd)  # ✅ Async
+    retcode, stdout, stderr = await run_shell(download_cmd)
 
-    # Retry logic for visionias (अगर fail हो तो 10 बार तक retry)
+    # VisionIAS के लिए Retry logic
     if "visionias" in cmd and retcode != 0 and failed_counter <= 10:
         failed_counter += 1
         await asyncio.sleep(5)
-        return await download_video(url, cmd, name)  # ✅ recursive async call
+        return await download_video(url, cmd, name)
 
     failed_counter = 0
 
-    # Check for downloaded file
+    # डाउनलोड हुई फाइल को ढूंढें
     try:
         if os.path.isfile(name):
             return name
@@ -274,25 +276,24 @@ async def download_video(url, cmd, name):
             return f"{name_base}.mp4.webm"
         return name
     except FileNotFoundError:
-        # fallback
         return f"{name}.mp4"
 
 # ============================================================
-# ✅ send_doc – Async (पहले से ही async है, सिर्फ time.sleep को asyncio.sleep करें)
+# ✅ send_doc – Async (पूरी तरह async sleep के साथ)
 # ============================================================
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name, channel_id):
     reply = await bot.send_message(channel_id, f"Downloading pdf:\n<pre><code>{name}</code></pre>")
-    await asyncio.sleep(1)   # ✅ time.sleep → asyncio.sleep
+    await asyncio.sleep(1)
     start_time = time.time()
     await bot.send_document(ka, caption=cc1)
     count += 1
     await reply.delete(True)
-    await asyncio.sleep(1)   # ✅
+    await asyncio.sleep(1)
     os.remove(ka)
-    await asyncio.sleep(3)   # ✅
+    await asyncio.sleep(3)
 
 # ============================================================
-# ✅ decrypt_file – sync, fine (uses mmap)
+# ✅ decrypt_file – sync (uses mmap)
 # ============================================================
 def decrypt_file(file_path, key):
     if not os.path.exists(file_path):
@@ -305,7 +306,7 @@ def decrypt_file(file_path, key):
     return True
 
 # ============================================================
-# ✅ download_and_decrypt_video – पहले से async, ठीक है
+# ✅ download_and_decrypt_video – Async
 # ============================================================
 async def download_and_decrypt_video(url, cmd, name, key):
     video_path = await download_video(url, cmd, name)
@@ -319,7 +320,7 @@ async def download_and_decrypt_video(url, cmd, name, key):
             return None
 
 # ============================================================
-# ✅ send_vid – सभी subprocess.run को run_shell में बदलें
+# ✅ send_vid – सभी subprocess.run → run_shell (Async)
 # ============================================================
 async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channel_id):
     # Thumbnail generate – async
@@ -340,7 +341,6 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
         else:
             w_filename = f"w_{filename}"
             font_path = "vidwater.ttf"
-            # Watermark – async
             await run_shell(
                 f'ffmpeg -i "{filename}" -vf "drawtext=fontfile={font_path}:text=\'{vidwatermark}\':fontcolor=white@0.3:fontsize=h/6:x=(w-text_w)/2:y=(h-text_h)/2" -codec:a copy "{w_filename}"'
             )
