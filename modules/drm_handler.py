@@ -34,6 +34,7 @@ import aiofiles
 import zipfile
 import shutil
 import ffmpeg
+from clean import cleanup_downloads, cleanup_temp_files
 
 import saini as helper
 import globals
@@ -443,8 +444,8 @@ async def drm_handler(bot: Client, m: Message):
                                     copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                                     count += 1
                                     os.remove(f'{namef}.pdf')
-                                    success = True
-                                    break  # Exit the retry loop if successful
+                                    s = True
+                                    break  # Exit the retry loop if sful
                                 else:
                                     failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {response.status_code} {response.reason}")
                                     failure_msgs.append(failure_msg)
@@ -551,6 +552,14 @@ async def drm_handler(bot: Client, m: Message):
         await bot.send_message(channel_id, f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n<blockquote>🔗 Total URLs: {len(links)} \n┃   ┠🔴 Total Failed URLs: {failed_count}\n┃   ┠🟢 Total Successful URLs: {success_count}\n┃   ┃   ┠🎥 Total Video URLs: {video_count}\n┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n")
         if "/d" not in raw_text7:
             await bot.send_message(m.chat.id, f"<blockquote><b>✅ Your Task is completed, please check your Set Channel📱</b></blockquote>")
+
+        # ========== ✅ HAR BATCH KE BAAD CLEANUP ==========
+    try:
+        await cleanup_downloads(f"./downloads/{m.chat.id}")
+        await cleanup_temp_files()
+        await asyncio.sleep(1)  # Disk को थोड़ा आराम
+    except Exception as e:
+        print(f"Cleanup error: {e}")
 
 #============================================================================================================
 def register_drm_handlers(bot):
