@@ -539,6 +539,8 @@ async def drm_handler(bot: Client, m: Message):
                 failed_count += 1
                 continue
 
+            await asyncio.sleep(1)
+
     except Exception as e:
         await m.reply_text(e)
         time.sleep(2)
