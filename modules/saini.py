@@ -126,14 +126,15 @@ def vid_info(info):
     return new_info
 
 # ============================================================
-# ✅ decrypt_and_merge_video – पूरी तरह Async (DRM वीडियो)
+# ✅ decrypt_and_merge_video – FULLY OPTIMIZED (DRM with Aria2 + Fragments)
 # ============================================================
 async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name, quality="720"):
     try:
         output_path = Path(output_path)
         output_path.mkdir(parents=True, exist_ok=True)
 
-        cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --external-downloader aria2c "{mpd_url}"'
+        # ⚡ DRM के लिए Concurrent Fragments 10 + Aria2 (16 connections) – दोनों एक साथ
+        cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --concurrent-fragments 10 --external-downloader aria2c --downloader-args "aria2c: -x 16 -s 16 -k 1M -j 5 --summary-interval=0 --console-log-level=error" "{mpd_url}"'
         print(f"Running: {cmd1}")
         await run_shell(cmd1)
 
@@ -187,7 +188,7 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
         raise
 
 # ============================================================
-# ✅ run – Async
+# ✅ run – Async (छोटा सा shell helper)
 # ============================================================
 async def run(cmd):
     proc = await asyncio.create_subprocess_shell(
@@ -234,26 +235,29 @@ def time_name():
     return f"{date} {current_time}.mp4"
 
 # ============================================================
-# ✅ download_video – पूरी तरह Async + PIPELINE OPTIMIZED
+# ✅ download_video – FULLY OPTIMIZED FOR RENDER (MAX SPEED)
 # ============================================================
+failed_counter = 0  # Global counter for visionias retries
+
 async def download_video(url, cmd, name):
     global failed_counter
 
-    # 🚀 RENDER + SPEED PIPELINE FIX:
-    # अगर M3U8 या MPD (HLS/DASH) है तो Aria2 हटाओ और yt-dlp के Concurrent Fragments चालू करो
+    # 🔥 Render के Data Center IP को तोड़ने के लिए:
+    # 1. HLS/DASH (m3u8/mpd) – Concurrent Fragments बढ़ाकर 10 करो
+    # 2. Progressive MP4 – Aria2 के 16 कनेक्शन चालू करो
     if "m3u8" in url or "mpd" in url:
-        # 5 चंक्स एक साथ डाउनलोड होंगे (CPU पर ज्यादा लोड नहीं, Render के लिए परफेक्ट)
-        download_cmd = f'{cmd} -R 25 --fragment-retries 25 --no-check-certificate --concurrent-fragments 5'
+        # ⚡ 10 fragments एक साथ – CDN throttle को तोड़ने का सबसे अच्छा तरीका
+        download_cmd = f'{cmd} -R 25 --fragment-retries 25 --no-check-certificate --concurrent-fragments 10'
     else:
-        # Progressive (MP4) वीडियो के लिए Aria2, लेकिन 2 कनेक्शन (stable render fix)
-        download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 2 -j 4 --summary-interval=0 --console-log-level=error"'
+        # ⚡ Aria2 के 16 कनेक्शन + 5 समानांतर डाउनलोड (Render की RAM के हिसाब से balanced)
+        download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -s 16 -k 1M -j 5 --summary-interval=0 --console-log-level=error"'
 
     print(f"Download command: {download_cmd}")
     logging.info(download_cmd)
 
     retcode, stdout, stderr = await run_shell(download_cmd)
 
-    # VisionIAS के लिए Retry logic
+    # VisionIAS Retry Logic
     if "visionias" in cmd and retcode != 0 and failed_counter <= 10:
         failed_counter += 1
         await asyncio.sleep(5)
@@ -261,22 +265,16 @@ async def download_video(url, cmd, name):
 
     failed_counter = 0
 
-    # डाउनलोड हुई फाइल को ढूंढें
-    try:
-        if os.path.isfile(name):
-            return name
-        elif os.path.isfile(f"{name}.webm"):
-            return f"{name}.webm"
-        name_base = name.split(".")[0]
-        if os.path.isfile(f"{name_base}.mkv"):
-            return f"{name_base}.mkv"
-        elif os.path.isfile(f"{name_base}.mp4"):
-            return f"{name_base}.mp4"
-        elif os.path.isfile(f"{name_base}.mp4.webm"):
-            return f"{name_base}.mp4.webm"
+    # Downloaded file को ढूंढें
+    if os.path.isfile(name):
         return name
-    except FileNotFoundError:
-        return f"{name}.mp4"
+    elif os.path.isfile(f"{name}.webm"):
+        return f"{name}.webm"
+    name_base = name.split(".")[0]
+    for ext in [".mkv", ".mp4", ".mp4.webm"]:
+        if os.path.isfile(f"{name_base}{ext}"):
+            return f"{name_base}{ext}"
+    return name
 
 # ============================================================
 # ✅ send_doc – Async (पूरी तरह async sleep के साथ)
