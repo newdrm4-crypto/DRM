@@ -320,7 +320,7 @@ async def drm_handler(bot: Client, m: Message):
                 url = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers={'x-access-token': f'{cptoken}'}).json()['url']
             
             elif 'media-cdn.classplusapp.com' in url or 'media-cdn-alisg.classplusapp.com' in url or 'media-cdn-a.classplusapp.com' in url: 
-                content = url.replace("https://", "").split("contentId=")[-1]
+                content = url.replace("https://", "").split("contentHashIdl=")[-1]
                 
                 if ".m3u8" in content:
                     content = content.split(".m3u8")[0]
@@ -344,7 +344,7 @@ async def drm_handler(bot: Client, m: Message):
                 }
                 
                 params = {
-                    'contentId': content,
+                    'contentHashIdl': content,
                     'offlineDownload': "false"
                 }
 
