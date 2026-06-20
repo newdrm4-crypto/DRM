@@ -35,4 +35,5 @@ RUN pip3 install --no-cache-dir --upgrade pip \
 
 # Set the command to run the application
 CMD ["sh", "-c", "gunicorn app:app & python3 modules/main.py"]
+RUN apt-get update && apt-get install -y aria2
 
